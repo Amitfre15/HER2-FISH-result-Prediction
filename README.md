@@ -126,7 +126,7 @@ Citation
 If you use this code, please cite the Prov-Gigapath paper and our paper:
 
     @article{frechter2026prediction,
-      title={Prediction of OncotypeDX recurrence score using H\&E stained WSI images},
+      title={Prediction of HER2 FISH result from Registered H&E and IHC Slides in breast cancer},
       author={Frechter, Amit and Sabo, Edmond and Polonia, Antonio and Stoliar, Karin and Kimmel, Ron and Shamai, Gil},
       journal={medRxiv},
       pages={2026--06},
