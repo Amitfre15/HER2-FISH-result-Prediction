@@ -1,4 +1,5 @@
 HER2-FISH-result-Prediction
+
 A deep learning framework for HER2 status prediction in breast cancer from Registered H&E and IHC slides.
 
 The feature‑extraction backbone and slide‑level transformer architecture are adapted from https://github.com/prov-gigapath/prov-gigapath © the Prov‑GigaPath authors, licensed under Apache‑2.0, and adjusted to fit our requirements.
