@@ -14,6 +14,26 @@ The software has been tested with Ubuntu 22.04, an NVIDIA RTX A6000 GPU, and the
     openslide-python=1.3.1
 In the tested configuration, the environment installation time averages 20 minutes.
 
+## Installation
+### Clone or download the repository:
+```bash
+git clone git@github.com:Amitfre15/HER2-FISH-result-Prediction.git
+cd HER2-FISH-result-Prediction
+```
+
+### Create the Conda environment
+
+```bash
+conda env create -f environment.yml
+```
+
+### Activate the environment
+
+```bash
+conda activate gigapath
+```
+
+
 ## Usage
 ## 1. Run preprocessing:
 
@@ -183,19 +203,10 @@ The script will create two folders in the data directory: /Gigapath_HE/cancer_ma
 ## 9. Train and run inference using the paper's model
 To train the transformer and run inference with it using malignant paired H&E and IHC tiles as in the paper, add the --paired_training_mw and --malig_paired_mw flags. 
 
-Model Uses
+## Model Uses
 The model's intended use is derived from the intended use as set by Prov-Gigapath. The model is intended to support AI research on pathology and the reproduction of the reported results. Any deployed use of the model is unintended and is out of scope.
 
-Requirements
-To install the requirements, use:
-
-    $ conda env create -f environment.yml
-
-Usage
-Clone or download the repository and run the provided scripts together with the included metadata and functions folders. These reproduce the main figures presented in the paper.
-
-
-Citation
+## Citation
 If you use this code, please cite the Prov-Gigapath paper and our paper:
 
     @article{frechter2026prediction,
