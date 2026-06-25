@@ -157,10 +157,10 @@ label columns: any label you wish to train or test on (for example, "RS")
 For the dataset arguments (train_dataset, val_dataset, test_dataset), pass a list of names that will be matched to the values in the "id" column. For the fold arguments, pass a list of identifiers that will be matched to the values in the "fold" column.
 
 
-## 7. Run inference with the transformer trained to classify malignant vs benign to enable malignancy mask creation
-Add the --predict_cancer and --all_he_tiles flags. This will create a cancer_probs folder in the data directory, with the per‑tile malignancy scores.
+## 7. Classify malignant vs benign to enable malignancy mask creation
+To run inference with the transformer trained to classify malignant vs benign to enable malignancy mask creation, add the --predict_cancer and --all_he_tiles flags. This will create a cancer_probs folder in the data directory, with the per‑tile malignancy scores.
 
-8. Produce the malignancy mask:
+## 8. Produce the malignancy mask:
 
         cancer_segment.py [arguments]
     
@@ -180,8 +180,8 @@ Run with default parameters:
 The script will create two folders in the data directory: /Gigapath_HE/cancer_maps, with the malignancy heatmaps, and /Gigapath_IHC/tumor_indices_from_cancer_map, with the malignancy masks.
 
 
-## 9. Train the transformer and run inference with it using malignant paired H&E and IHC tiles as in the paper
-Add the --paired_training_mw and --malig_paired_mw flags. 
+## 9. Train and run inference using the paper's model
+To train the transformer and run inference with it using malignant paired H&E and IHC tiles as in the paper, add the --paired_training_mw and --malig_paired_mw flags. 
 
 Model Uses
 The model's intended use is derived from the intended use as set by Prov-Gigapath. The model is intended to support AI research on pathology and the reproduction of the reported results. Any deployed use of the model is unintended and is out of scope.
