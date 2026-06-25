@@ -4,7 +4,7 @@ A deep learning framework for HER2 status prediction in breast cancer from Regis
 
 The feature‑extraction backbone and slide‑level transformer architecture are adapted from https://github.com/prov-gigapath/prov-gigapath © the Prov‑GigaPath authors, licensed under Apache‑2.0, and adjusted to fit our requirements.
 
-The software has been tested with Ubuntu 22.04, an NVIDIA RTX A6000 gpu and the following python libraries (also specified in environment.yml):
+The software has been tested with Ubuntu 22.04, an NVIDIA RTX A6000 GPU, and the following Python libraries (also specified in environment.yml):
 
     python=3.9.18
     torch=2.0.0
@@ -15,61 +15,103 @@ The software has been tested with Ubuntu 22.04, an NVIDIA RTX A6000 gpu and the 
 In the tested configuration, the environment installation time averages 20 minutes.
 
 Usage
-Run preprocessing:
+1. Run preprocessing:
 
-    run_preprocess.py [arguments]
-    Arguments:
-        --data_dir            Path to the folder containing the slides.
-        --metadata            Path to the metadata csv file.
-        --tissue_coverage     Minimum tissue percentage for a valid tile (Default 0.3).
+        run_preprocess.py [arguments]
+        Arguments:
+            --data_dir            Path to the folder containing the slides.
+            --metadata            Path to the metadata CSV file.
+            --tissue_coverage     Minimum tissue percentage for a valid tile (Default 0.3).
 Example
 Run with default parameters:
 
     $ python3 run_preprocess.py --data_dir ./TCGA --metadata ./TCGA/meta.csv
 The script will create two folders in the data directory named Grids_10 and SegData, which are necessary for the later steps. The slides must be whole slide image (WSI) files in a format supported by the openslide library (for example, .svs). One public source for WSIs is The Cancer Genome Atlas (TCGA) dataset, and the slides from TCGA can be obtained from the Genomic Data Commons (GDC) website. Explanation on how to download TCGA slides can be found at: https://docs.gdc.cancer.gov/Data_Transfer_Tool/Users_Guide/Data_Download_and_Upload/
 
-Extract slide tile features:
+2. Extract slide tile features:
 
-    png_tile_extraction.py [arguments]
-
-    Arguments:
-        --data_dir            Location of data root folder.
-        --metadata_file       Location of metadata file.
-        --target_mpp          MPP at which the tile features will be extracted (Default 0.5).
-        --hf_token            Hugging Face token, needed to load the prov-gigapath model.
+        png_tile_extraction.py [arguments]
+    
+        Arguments:
+            --base_path           Root folder containing slide files.
+            --save_path           Path to save tiles and features.
+            --excel_path          Location of metadata file.
+            --mpp                 Target MPP at which the tile features will be extracted (Default 0.5).
+            --hf_token            Hugging Face token, needed to load the prov-gigapath model.
+        
 Example
 Run with default parameters:
 
-    $ python3 png_tile_extraction.py --data_dir ./TCGA --metadata_file ./TCGA/meta.csv --target_mpp 0.5 --hf_token <your_token>
-The script will create two folders in the data directory: gigapath_features containing the per‑tile feature for each slide and png_tiles containing the corresponding image tiles and their coordinates.
+    $ python3 png_tile_extraction.py --base_path ./TCGA --save_path ./TCGA/Gigapath_HE --excel_path ./TCGA/meta.csv --mpp 0.5 --hf_token <your_token>
+The script will create two folders in the data directory: gigapath_features containing the per‑tile feature for each slide and png_tiles containing the corresponding image tiles and their coordinates. 
+To use the paired H&E and IHC framework, pass "Gigapath_HE" and "Gigapath_IHC" to save_path for H&E and IHC extractions, respectively.
 
 To obtain the Hugging Face token used to access the model, you need to agree to the terms set by Prov-Gigapath. This can be done at https://huggingface.co/prov-gigapath/prov-gigapath.
 
-Train the transformer:
 
-    finetune/main.py [arguments]
+3. Register an annotated H&E-IHC thumb pair:
 
-    Arguments:
-        --dataset_csv         Dataset CSV file.
-        --root_path           Path ending with "gigapath_features".
-        --epochs              Number of training epochs (Default 5).
-        --warmup_epochs       Number of warmup epochs (Default 1).
-        --gc                  Gradient accumulation (Default 32).
-        --model_select        Criteria for choosing the model checkpoint ("last_epoch" or "val").
-        --lr_scheduler        Learning rate scheduler ("cosine" or "fixed").
-        --save_dir            Save directory for outputs.
-        --exp_name            Experiment name, a folder with that name will be created.
-        --train_dataset       List of dataset names to train on.
-        --train_fold          List of folds to train on.
-        --val_dataset         List of dataset names to validate on.
-        --val_fold            List of folds to validate on.
-        --test_dataset        List of dataset names to test on.
-        --test_fold           List of folds to test on.
-        --label               Column name of the label.
-        --loss_fn             Loss function (Default "mse").
-        --paired_training_mw  Use paired H&E and IHC matched tiles for training.
-        --malig_paired_mw     Use paired H&E and IHC matched malignant tiles for training
-        --hf_token            Hugging Face token, needed to load the prov-gigapath model.
+        match_pairs.py [arguments]
+    
+        Arguments:
+            --root                Root directory to search for thumbnail pairs.
+            --dict_name           Name for the distance dictionary saved.
+            --display             Whether to display images and plots during processing.
+        
+Example
+Run with default parameters:
+
+    $ python3 match_pairs.py --root TCGA/pair_thumbs/ --dict_name global_transform
+
+4. Use the registration to save correspondence between H&E and IHC tiles:
+
+        finetune/slides_to_thumbs.py [arguments]
+    
+        Arguments:
+            --slides_excel_path   Path to matched slides CSV file.
+            --map_matrix_dir      Path to the directory containing the map matrices.
+            --he_tiles_path       Path to the directory containing H&E tiles.
+            --target_mpp          Target tiles MPP (Default 0.5).
+        
+Example
+Run with default parameters:
+
+    $ python3 match_pairs.py --slides_excel_path TCGA/matched_slides.csv --map_matrix_dir TCGA/pair_thumbs/ --he_tiles_path ./TCGA/Gigapath_HE/png_tiles_mpp0.5/
+
+To save tile correspondence, the metadata CSV file must have a row for each slide pair and the following columns with filled values:
+
+"SlideName": filename of the IHC slide (with extension)
+"Matched_HE_SlideName": filename of the H&E slide (with extension)
+"fold": cross-validation fold of the slide pair
+"patient barcode": patient identifier
+"label": HER2 status label of the slide pair
+
+
+5. Train the transformer:
+
+        finetune/main.py [arguments]
+    
+        Arguments:
+            --dataset_csv         Dataset CSV file.
+            --root_path           Path ending with "gigapath_features".
+            --epochs              Number of training epochs (Default 5).
+            --warmup_epochs       Number of warmup epochs (Default 1).
+            --gc                  Gradient accumulation (Default 32).
+            --model_select        Criteria for choosing the model checkpoint ("last_epoch" or "val").
+            --lr_scheduler        Learning rate scheduler ("cosine" or "fixed").
+            --save_dir            Save directory for outputs.
+            --exp_name            Experiment name, a folder with that name will be created.
+            --train_dataset       List of dataset names to train on.
+            --train_fold          List of folds to train on.
+            --val_dataset         List of dataset names to validate on.
+            --val_fold            List of folds to validate on.
+            --test_dataset        List of dataset names to test on.
+            --test_fold           List of folds to test on.
+            --label               Column name of the label.
+            --loss_fn             Loss function (Default "mse").
+            --paired_training_mw  Use paired H&E and IHC matched tiles for training.
+            --malig_paired_mw     Use paired H&E and IHC matched malignant tiles for training.
+            --hf_token            Hugging Face token, needed to load the prov-gigapath model.
 Run python3 finetune/main.py -h for more arguments
 
 Example
@@ -78,37 +120,25 @@ Run with default parameters:
     $ python3 finetune/main.py --dataset_csv TCGA/meta.csv --root_path TCGA/gigapath_features/ --epochs 5 --warmup_epochs 1 --gc 32 --model_select 'last_epoch' --lr_scheduler 'cosine' --save_dir ./ --exp_name 'example_train' --train_dataset '["TCGA"]' --train_fold '[2,3,4,5]' --val_dataset '["TCGA"]' --val_fold '[1]' --test_dataset '["TCGA"]' --test_fold '[6]' --label 'RS' --loss_fn 'mse' --hf_token <your_token>
 To train the transformer, the root_path must end with "gigapath_features" and a folder named "png_tiles" must be present at the same location.
 
-Register an annotated H&E-IHC thumb pair:
+6. Run inference with the transformer:
 
-    match_pairs.py [arguments]
-
-    Arguments:
-        --root                Root directory to search for thumbnail pairs
-        --dict_name           Name for the distance dictionary saved
-        --display             Whether to display images and plots during processing
-        
-Example
-Run with default parameters:
-
-    $ python3 match_pairs.py --root TCGA/pair_thumbs/ --dict_name global_transform
-
-To train the transformer with malignant paired H&E and IHC tiles as in the paper, add the --paired_training_mw and --malig_paired_mw flags.
-
-Run inference with the transformer:
-
-    finetune/main.py --run_inference [arguments]
-
-    Arguments:
-        --dataset_csv         Dataset CSV file.
-        --root_path           Path ending with "gigapath_features".
-        --save_dir            Save directory for outputs.
-        --exp_name            Experiment name.
-        --test_dataset        List of dataset names to test on.
-        --test_fold           List of folds to test on.
-        --label               Column name of the label.
-        --loss_fn             Loss function.
-        --model_ckpt          Model checkpoint path.
-        --hf_token            Hugging Face token
+        finetune/main.py --run_inference [arguments]
+    
+        Arguments:
+            --dataset_csv         Dataset CSV file.
+            --root_path           Path ending with "gigapath_features".
+            --save_dir            Save directory for outputs.
+            --exp_name            Experiment name.
+            --test_dataset        List of dataset names to test on.
+            --test_fold           List of folds to test on.
+            --label               Column name of the label.
+            --loss_fn             Loss function.
+            --model_ckpt          Model checkpoint path.
+            --paired_training_mw  Use paired H&E and IHC matched tiles for training.
+            --malig_paired_mw     Use paired H&E and IHC matched malignant tiles for training.
+            --predict_cancer      Predict malignant vs benign per tile.
+            --all_he_tiles        Use all HE tiles for prediction.
+            --hf_token            Hugging Face token.
 Example
 Run with default parameters:
 
@@ -125,6 +155,31 @@ To train or run inference, the metadata CSV file must have a row for each slide 
 label columns: any label you wish to train or test on (for example, "RS")
 For the dataset arguments (train_dataset, val_dataset, test_dataset), pass a list of names that will be matched to the values in the "id" column. For the fold arguments, pass a list of identifiers that will be matched to the values in the "fold" column.
 
+
+7. To run inference with the transformer trained to classify malignant vs benign to enable malignancy mask creation, add the --predict_cancer and --all_he_tiles flags. This will create a cancer_probs folder in the data directory, with the per‑tile malignancy scores.
+
+8. Produce the malignancy mask:
+
+        cancer_segment.py [arguments]
+    
+        Arguments:
+            --excel_path          Dataset CSV file.
+            --save_path           Path to save score_maps.
+            --target_mpp          Tiles MPP (Default 0.5).
+            --seg_from_cancer_predictions  Save tile malignancy prediction map.
+            --cancer_prob_path    Path for the per‑tile malignancy score files.
+            --val_fold            Validation fold used for the cancer model training (To avoid data leakage).
+
+Example
+Run with default parameters:
+
+    python3 cancer_segment.py --excel_path TCGA/meta.csv --save_path ./TCGA/Gigapath_HE --seg_from_cancer_predictions -cpp $CANCER_PROB_DIR -vf $VAL_FOLD
+
+The script will create two folders in the data directory: /Gigapath_HE/cancer_maps, with the malignancy heatmaps, and /Gigapath_IHC/tumor_indices_from_cancer_map, with the malignancy masks.
+
+
+9. To train the transformer and run inference with it using malignant paired H&E and IHC tiles as in the paper, add the --paired_training_mw and --malig_paired_mw flags. 
+
 Model Uses
 The model's intended use is derived from the intended use as set by Prov-Gigapath. The model is intended to support AI research on pathology and the reproduction of the reported results. Any deployed use of the model is unintended and is out of scope.
 
@@ -132,13 +187,9 @@ Requirements
 To install the requirements, use:
 
     $ conda env create -f environment.yml
-Reproducing the analysis
-The code to reproduce the figures from the paper "Prediction of HER2 FISH result from Registered H&E and IHC Slides in breast cancer" in Python is also provided:
 
 Usage
 Clone or download the repository and run the provided scripts together with the included metadata and functions folders. These reproduce the main figures presented in the paper.
-
-Main Analysis Scripts
 
 
 Citation
