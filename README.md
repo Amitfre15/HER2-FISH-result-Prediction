@@ -14,7 +14,7 @@ The software has been tested with Ubuntu 22.04, an NVIDIA RTX A6000 GPU, and the
     openslide-python=1.3.1
 In the tested configuration, the environment installation time averages 20 minutes.
 
-##Usage
+## Usage
 1. Run preprocessing:
 
         run_preprocess.py [arguments]
