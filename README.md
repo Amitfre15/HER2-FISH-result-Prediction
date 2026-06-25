@@ -15,21 +15,21 @@ The software has been tested with Ubuntu 22.04, an NVIDIA RTX A6000 GPU, and the
 In the tested configuration, the environment installation time averages 20 minutes.
 
 ## Usage
-1. Run preprocessing:
+## 1. Run preprocessing:
 
         run_preprocess.py [arguments]
         Arguments:
             --data_dir            Path to the folder containing the slides.
             --metadata            Path to the metadata CSV file.
             --tissue_coverage     Minimum tissue percentage for a valid tile (Default 0.3).
-## Example
+### Example
 Run with default parameters:
 
     $ python3 run_preprocess.py --data_dir ./TCGA --metadata ./TCGA/meta.csv
 The script will create two folders in the data directory named Grids_10 and SegData, which are necessary for the later steps. The slides must be whole slide image (WSI) files in a format supported by the openslide library (for example, .svs). One public source for WSIs is The Cancer Genome Atlas (TCGA) dataset, and the slides from TCGA can be obtained from the Genomic Data Commons (GDC) website. Explanation on how to download TCGA slides can be found at: https://docs.gdc.cancer.gov/Data_Transfer_Tool/Users_Guide/Data_Download_and_Upload/
 
 
-2. Extract slide tile features:
+## 2. Extract slide tile features:
 
         png_tile_extraction.py [arguments]
     
@@ -40,7 +40,7 @@ The script will create two folders in the data directory named Grids_10 and SegD
             --mpp                 Target MPP at which the tile features will be extracted (Default 0.5).
             --hf_token            Hugging Face token, needed to load the prov-gigapath model.
         
-## Example
+### Example
 Run with default parameters:
 
     $ python3 png_tile_extraction.py --base_path ./TCGA --save_path ./TCGA/Gigapath_HE --excel_path ./TCGA/meta.csv --mpp 0.5 --hf_token <your_token>
@@ -50,7 +50,7 @@ To use the paired H&E and IHC framework, pass "Gigapath_HE" and "Gigapath_IHC" t
 To obtain the Hugging Face token used to access the model, you need to agree to the terms set by Prov-Gigapath. This can be done at https://huggingface.co/prov-gigapath/prov-gigapath.
 
 
-3. Register an annotated H&E-IHC thumb pair:
+## 3. Register an annotated H&E-IHC thumb pair:
 
         match_pairs.py [arguments]
     
@@ -59,12 +59,12 @@ To obtain the Hugging Face token used to access the model, you need to agree to 
             --dict_name           Name for the distance dictionary saved.
             --display             Whether to display images and plots during processing.
         
-## Example
+### Example
 Run with default parameters:
 
     $ python3 match_pairs.py --root TCGA/pair_thumbs/ --dict_name global_transform
 
-4. Use the registration to save correspondence between H&E and IHC tiles:
+## 4. Use the registration to save correspondence between H&E and IHC tiles:
 
         finetune/slides_to_thumbs.py [arguments]
     
@@ -74,7 +74,7 @@ Run with default parameters:
             --he_tiles_path       Path to the directory containing H&E tiles.
             --target_mpp          Target tiles MPP (Default 0.5).
         
-## Example
+### Example
 Run with default parameters:
 
     $ python3 match_pairs.py --slides_excel_path TCGA/matched_slides.csv --map_matrix_dir TCGA/pair_thumbs/ --he_tiles_path ./TCGA/Gigapath_HE/png_tiles_mpp0.5/
@@ -88,7 +88,7 @@ To save tile correspondence, the metadata CSV file must have a row for each slid
 "label": HER2 status label of the slide pair
 
 
-5. Train the transformer:
+## 5. Train the transformer:
 
         finetune/main.py [arguments]
     
@@ -115,13 +115,13 @@ To save tile correspondence, the metadata CSV file must have a row for each slid
             --hf_token            Hugging Face token, needed to load the prov-gigapath model.
 Run python3 finetune/main.py -h for more arguments
 
-## Example
+### Example
 Run with default parameters:
 
     $ python3 finetune/main.py --dataset_csv TCGA/meta.csv --root_path TCGA/gigapath_features/ --epochs 5 --warmup_epochs 1 --gc 32 --model_select 'last_epoch' --lr_scheduler 'cosine' --save_dir ./ --exp_name 'example_train' --train_dataset '["TCGA"]' --train_fold '[2,3,4,5]' --val_dataset '["TCGA"]' --val_fold '[1]' --test_dataset '["TCGA"]' --test_fold '[6]' --label 'RS' --loss_fn 'mse' --hf_token <your_token>
 To train the transformer, the root_path must end with "gigapath_features" and a folder named "png_tiles" must be present at the same location.
 
-6. Run inference with the transformer:
+## 6. Run inference with the transformer:
 
         finetune/main.py --run_inference [arguments]
     
@@ -140,7 +140,7 @@ To train the transformer, the root_path must end with "gigapath_features" and a 
             --predict_cancer      Predict malignant vs benign per tile.
             --all_he_tiles        Use all HE tiles for prediction.
             --hf_token            Hugging Face token.
-## Example
+### Example
 Run with default parameters:
 
     $ python3 finetune/main.py --dataset_csv TCGA/meta.csv --root_path TCGA/gigapath_features/ --save_dir ./ --exp_name 'example_test' --test_dataset '["TCGA"]' --test_fold '[6]' --label 'RS' --loss_fn 'mse' --model_ckpt finetune_gigapath/example_train/eval_pretrained_finetune_gigapath/checkpoint.pt --run_inference --hf_token <your_token>
@@ -157,7 +157,7 @@ label columns: any label you wish to train or test on (for example, "RS")
 For the dataset arguments (train_dataset, val_dataset, test_dataset), pass a list of names that will be matched to the values in the "id" column. For the fold arguments, pass a list of identifiers that will be matched to the values in the "fold" column.
 
 
-7. To run inference with the transformer trained to classify malignant vs benign to enable malignancy mask creation, add the --predict_cancer and --all_he_tiles flags. This will create a cancer_probs folder in the data directory, with the per‑tile malignancy scores.
+## 7. To run inference with the transformer trained to classify malignant vs benign to enable malignancy mask creation, add the --predict_cancer and --all_he_tiles flags. This will create a cancer_probs folder in the data directory, with the per‑tile malignancy scores.
 
 8. Produce the malignancy mask:
 
@@ -171,7 +171,7 @@ For the dataset arguments (train_dataset, val_dataset, test_dataset), pass a lis
             --cancer_prob_path    Path for the per‑tile malignancy score files.
             --val_fold            Validation fold used for the cancer model training (To avoid data leakage).
 
-## Example
+### Example
 Run with default parameters:
 
     python3 cancer_segment.py --excel_path TCGA/meta.csv --save_path ./TCGA/Gigapath_HE --seg_from_cancer_predictions -cpp $CANCER_PROB_DIR -vf $VAL_FOLD
@@ -179,7 +179,7 @@ Run with default parameters:
 The script will create two folders in the data directory: /Gigapath_HE/cancer_maps, with the malignancy heatmaps, and /Gigapath_IHC/tumor_indices_from_cancer_map, with the malignancy masks.
 
 
-9. To train the transformer and run inference with it using malignant paired H&E and IHC tiles as in the paper, add the --paired_training_mw and --malig_paired_mw flags. 
+## 9. To train the transformer and run inference with it using malignant paired H&E and IHC tiles as in the paper, add the --paired_training_mw and --malig_paired_mw flags. 
 
 Model Uses
 The model's intended use is derived from the intended use as set by Prov-Gigapath. The model is intended to support AI research on pathology and the reproduction of the reported results. Any deployed use of the model is unintended and is out of scope.
