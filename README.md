@@ -15,86 +15,89 @@ In the tested configuration, the environment installation time averages 20 minut
 
 Usage
 Run preprocessing:
-    run_preprocess.py [arguments]
 
-Arguments:
-    --data_dir            Path to the folder containing the slides.
-    --metadata            Path to the metadata csv file.
-    --tissue_coverage     Minimum tissue percentage for a valid tile (Default 0.3).
+    run_preprocess.py [arguments]
+    Arguments:
+        --data_dir            Path to the folder containing the slides.
+        --metadata            Path to the metadata csv file.
+        --tissue_coverage     Minimum tissue percentage for a valid tile (Default 0.3).
 Example
 Run with default parameters:
 
-$ python3 run_preprocess.py --data_dir ./TCGA --metadata ./TCGA/meta.csv
+    $ python3 run_preprocess.py --data_dir ./TCGA --metadata ./TCGA/meta.csv
 The script will create two folders in the data directory named Grids_10 and SegData, which are necessary for the later steps. The slides must be whole slide image (WSI) files in a format supported by the openslide library (for example, .svs). One public source for WSIs is The Cancer Genome Atlas (TCGA) dataset, and the slides from TCGA can be obtained from the Genomic Data Commons (GDC) website. Explanation on how to download TCGA slides can be found at: https://docs.gdc.cancer.gov/Data_Transfer_Tool/Users_Guide/Data_Download_and_Upload/
 
 Extract slide tile features:
+
     png_tile_extraction.py [arguments]
 
-Arguments:
-    --data_dir            Location of data root folder.
-    --metadata_file       Location of metadata file.
-    --target_mpp          MPP at which the tile features will be extracted (Default 0.5).
-    --hf_token            Hugging Face token, needed to load the prov-gigapath model.
+    Arguments:
+        --data_dir            Location of data root folder.
+        --metadata_file       Location of metadata file.
+        --target_mpp          MPP at which the tile features will be extracted (Default 0.5).
+        --hf_token            Hugging Face token, needed to load the prov-gigapath model.
 Example
 Run with default parameters:
 
-$ python3 png_tile_extraction.py --data_dir ./TCGA --metadata_file ./TCGA/meta.csv --target_mpp 0.5 --hf_token <your_token>
+    $ python3 png_tile_extraction.py --data_dir ./TCGA --metadata_file ./TCGA/meta.csv --target_mpp 0.5 --hf_token <your_token>
 The script will create two folders in the data directory: gigapath_features containing the per‑tile feature for each slide and png_tiles containing the corresponding image tiles and their coordinates.
 
 To obtain the Hugging Face token used to access the model, you need to agree to the terms set by Prov-Gigapath. This can be done at https://huggingface.co/prov-gigapath/prov-gigapath.
 
 Train the transformer:
+
     finetune/main.py [arguments]
 
-Arguments:
-    --dataset_csv         Dataset CSV file.
-    --root_path           Path ending with "gigapath_features".
-    --epochs              Number of training epochs (Default 5).
-    --warmup_epochs       Number of warmup epochs (Default 1).
-    --gc                  Gradient accumulation (Default 32).
-    --model_select        Criteria for choosing the model checkpoint ("last_epoch" or "val").
-    --lr_scheduler        Learning rate scheduler ("cosine" or "fixed").
-    --save_dir            Save directory for outputs.
-    --exp_name            Experiment name, a folder with that name will be created.
-    --train_dataset       List of dataset names to train on.
-    --train_fold          List of folds to train on.
-    --val_dataset         List of dataset names to validate on.
-    --val_fold            List of folds to validate on.
-    --test_dataset        List of dataset names to test on.
-    --test_fold           List of folds to test on.
-    --label               Column name of the label.
-    --loss_fn             Loss function (Default "mse").
-    --hf_token            Hugging Face token, needed to load the prov-gigapath model.
+    Arguments:
+        --dataset_csv         Dataset CSV file.
+        --root_path           Path ending with "gigapath_features".
+        --epochs              Number of training epochs (Default 5).
+        --warmup_epochs       Number of warmup epochs (Default 1).
+        --gc                  Gradient accumulation (Default 32).
+        --model_select        Criteria for choosing the model checkpoint ("last_epoch" or "val").
+        --lr_scheduler        Learning rate scheduler ("cosine" or "fixed").
+        --save_dir            Save directory for outputs.
+        --exp_name            Experiment name, a folder with that name will be created.
+        --train_dataset       List of dataset names to train on.
+        --train_fold          List of folds to train on.
+        --val_dataset         List of dataset names to validate on.
+        --val_fold            List of folds to validate on.
+        --test_dataset        List of dataset names to test on.
+        --test_fold           List of folds to test on.
+        --label               Column name of the label.
+        --loss_fn             Loss function (Default "mse").
+        --hf_token            Hugging Face token, needed to load the prov-gigapath model.
 Run python3 finetune/main.py -h for more arguments
 
 Example
 Run with default parameters:
 
-$ python3 finetune/main.py --dataset_csv TCGA/meta.csv --root_path TCGA/gigapath_features/ --epochs 5 --warmup_epochs 1 --gc 32 --model_select 'last_epoch' --lr_scheduler 'cosine' --save_dir ./ --exp_name 'example_train' --train_dataset '["TCGA"]' --train_fold '[2,3,4,5]' --val_dataset '["TCGA"]' --val_fold '[1]' --test_dataset '["TCGA"]' --test_fold '[6]' --label 'RS' --loss_fn 'mse' --hf_token <your_token>
-In order to train the transformer, the root_path must end with "gigapath_features" and a folder named "png_tiles" must be present at the same location.
+    $ python3 finetune/main.py --dataset_csv TCGA/meta.csv --root_path TCGA/gigapath_features/ --epochs 5 --warmup_epochs 1 --gc 32 --model_select 'last_epoch' --lr_scheduler 'cosine' --save_dir ./ --exp_name 'example_train' --train_dataset '["TCGA"]' --train_fold '[2,3,4,5]' --val_dataset '["TCGA"]' --val_fold '[1]' --test_dataset '["TCGA"]' --test_fold '[6]' --label 'RS' --loss_fn 'mse' --hf_token <your_token>
+To train the transformer, the root_path must end with "gigapath_features" and a folder named "png_tiles" must be present at the same location.
 
 Run inference with the transformer:
+
     finetune/main.py --run_inference [arguments]
 
-Arguments:
-    --dataset_csv         Dataset CSV file.
-    --root_path           Path ending with "gigapath_features".
-    --save_dir            Save directory for outputs.
-    --exp_name            Experiment name.
-    --test_dataset        List of dataset names to test on.
-    --test_fold           List of folds to test on.
-    --label               Column name of the label.
-    --loss_fn             Loss function.
-    --model_ckpt          Model checkpoint path.
-    --hf_token            Hugging Face token
+    Arguments:
+        --dataset_csv         Dataset CSV file.
+        --root_path           Path ending with "gigapath_features".
+        --save_dir            Save directory for outputs.
+        --exp_name            Experiment name.
+        --test_dataset        List of dataset names to test on.
+        --test_fold           List of folds to test on.
+        --label               Column name of the label.
+        --loss_fn             Loss function.
+        --model_ckpt          Model checkpoint path.
+        --hf_token            Hugging Face token
 Example
 Run with default parameters:
 
-$ python3 finetune/main.py --dataset_csv TCGA/meta.csv --root_path TCGA/gigapath_features/ --save_dir ./ --exp_name 'example_test' --test_dataset '["TCGA"]' --test_fold '[6]' --label 'RS' --loss_fn 'mse' --model_ckpt finetune_gigapath/example_train/eval_pretrained_finetune_gigapath/checkpoint.pt --run_inference --hf_token <your_token>
+    $ python3 finetune/main.py --dataset_csv TCGA/meta.csv --root_path TCGA/gigapath_features/ --save_dir ./ --exp_name 'example_test' --test_dataset '["TCGA"]' --test_fold '[6]' --label 'RS' --loss_fn 'mse' --model_ckpt finetune_gigapath/example_train/eval_pretrained_finetune_gigapath/checkpoint.pt --run_inference --hf_token <your_token>
 Run inference without training with the Prov-Gigapath pretrained model:
 
-$ python3 finetune/main.py --dataset_csv TCGA/meta.csv --root_path TCGA/gigapath_features/ --save_dir ./ --exp_name 'example_test' --test_dataset '["TCGA"]' --test_fold '[6]' --label 'RS' --loss_fn 'mse' --run_inference --hf_token <your_token>
-In order to train or run inference, the metadata CSV file must have a row for each slide and the following columns with filled values:
+    $ python3 finetune/main.py --dataset_csv TCGA/meta.csv --root_path TCGA/gigapath_features/ --save_dir ./ --exp_name 'example_test' --test_dataset '["TCGA"]' --test_fold '[6]' --label 'RS' --loss_fn 'mse' --run_inference --hf_token <your_token>
+To train or run inference, the metadata CSV file must have a row for each slide and the following columns with filled values:
 
 "file": filename of the slide (with extension)
 "id": dataset identifier used by the dataset arguments
@@ -109,7 +112,7 @@ The model's intended use is derived from the intended use as set by Prov-Gigapat
 Requirements
 To install the requirements, use:
 
-$ conda env create -f environment.yml
+    $ conda env create -f environment.yml
 Reproducing the analysis
 The code to reproduce the figures from the paper "Prediction of HER2 FISH result from Registered H&E and IHC Slides in breast cancer" in Python is also provided:
 
