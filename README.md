@@ -67,6 +67,8 @@ Train the transformer:
         --test_fold           List of folds to test on.
         --label               Column name of the label.
         --loss_fn             Loss function (Default "mse").
+        --paired_training_mw  Use paired H&E and IHC matched tiles for training.
+        --malig_paired_mw     Use paired H&E and IHC matched malignant tiles for training
         --hf_token            Hugging Face token, needed to load the prov-gigapath model.
 Run python3 finetune/main.py -h for more arguments
 
@@ -75,6 +77,22 @@ Run with default parameters:
 
     $ python3 finetune/main.py --dataset_csv TCGA/meta.csv --root_path TCGA/gigapath_features/ --epochs 5 --warmup_epochs 1 --gc 32 --model_select 'last_epoch' --lr_scheduler 'cosine' --save_dir ./ --exp_name 'example_train' --train_dataset '["TCGA"]' --train_fold '[2,3,4,5]' --val_dataset '["TCGA"]' --val_fold '[1]' --test_dataset '["TCGA"]' --test_fold '[6]' --label 'RS' --loss_fn 'mse' --hf_token <your_token>
 To train the transformer, the root_path must end with "gigapath_features" and a folder named "png_tiles" must be present at the same location.
+
+Register an annotated H&E-IHC thumb pair:
+
+    match_pairs.py [arguments]
+
+    Arguments:
+        --root                Root directory to search for thumbnail pairs
+        --dict_name           Name for the distance dictionary saved
+        --display             Whether to display images and plots during processing
+        
+Example
+Run with default parameters:
+
+    $ python3 match_pairs.py --root TCGA/pair_thumbs/ --dict_name global_transform
+
+To train the transformer with malignant paired H&E and IHC tiles as in the paper, add the --paired_training_mw and --malig_paired_mw flags.
 
 Run inference with the transformer:
 
