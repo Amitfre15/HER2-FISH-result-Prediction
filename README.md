@@ -28,6 +28,7 @@ Run with default parameters:
     $ python3 run_preprocess.py --data_dir ./TCGA --metadata ./TCGA/meta.csv
 The script will create two folders in the data directory named Grids_10 and SegData, which are necessary for the later steps. The slides must be whole slide image (WSI) files in a format supported by the openslide library (for example, .svs). One public source for WSIs is The Cancer Genome Atlas (TCGA) dataset, and the slides from TCGA can be obtained from the Genomic Data Commons (GDC) website. Explanation on how to download TCGA slides can be found at: https://docs.gdc.cancer.gov/Data_Transfer_Tool/Users_Guide/Data_Download_and_Upload/
 
+
 2. Extract slide tile features:
 
         png_tile_extraction.py [arguments]
