@@ -211,12 +211,14 @@ If you use this code, please cite the Prov-Gigapath paper and our paper:
 
     @article{frechter2026prediction,
       title={Prediction of HER2 FISH result from Registered H&E and IHC Slides in breast cancer},
-      author={Frechter, Amit and Sabo, Edmond and Polonia, Antonio and Stoliar, Karin and Kimmel, Ron and Shamai, Gil},
+      author={Frechter, Amit and Sabo, Edmond and Cretu, Alexandra and Polonia, Antonio and Cohen, Shahar and Goldman, Tal and Farkash, Shay and Howard, Frederick M and Stoliar, Karin and Kimmel, Ron and Shamai, Gil},
       journal={medRxiv},
       pages={2026--06},
       year={2026},
       publisher={Cold Spring Harbor Laboratory Press}
     }
+Amit Frechter 1, Edmond Sabo 2,3, Alexandra Cretu 2, António Polónia 4,5, Shahar Cohen 1, Tal Goldman 6, Shay Farkash ?, Frederick M Howard 7, Karin Stoliar 8, Ron Kimmel 1,9, Gil Shamai 1
+
     
     @article{xu2024gigapath,
       title={A whole-slide foundation model for digital pathology from real-world data},
