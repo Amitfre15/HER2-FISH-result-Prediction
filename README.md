@@ -217,7 +217,6 @@ If you use this code, please cite the Prov-Gigapath paper and our paper:
       year={2026},
       publisher={Cold Spring Harbor Laboratory Press}
     }
-Amit Frechter 1, Edmond Sabo 2,3, Alexandra Cretu 2, António Polónia 4,5, Shahar Cohen 1, Tal Goldman 6, Shay Farkash ?, Frederick M Howard 7, Karin Stoliar 8, Ron Kimmel 1,9, Gil Shamai 1
 
     
     @article{xu2024gigapath,
